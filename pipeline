@@ -1,0 +1,99 @@
+## Jenkins Pipeline for Automating EKS Cluster Creation using Terraform
+
+This Jenkins pipeline automates the provisioning and deletion of an **AWS EKS Kubernetes cluster** using **Terraform**.
+The pipeline pulls the Terraform code from GitHub and executes infrastructure commands through different stages.
+
+### Pipeline Stages
+
+1. **Clone Repository**
+
+   * Jenkins pulls the Terraform code from the GitHub repository.
+
+2. **Terraform Initialization**
+
+   * Initializes Terraform and downloads required providers.
+
+3. **Terraform Validation**
+
+   * Validates the Terraform configuration files.
+
+4. **Infrastructure Plan**
+
+   * Shows the execution plan before creating infrastructure.
+
+5. **Create or Destroy EKS Cluster**
+
+   * Uses a parameterized action (`apply` or `destroy`) to create or delete the EKS cluster.
+
+### Jenkins Pipeline Script
+
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('AWS_Access_Key')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_Secret_Key')
+        AWS_DEFAULT_REGION = 'us-east-1'
+    }
+
+    stages {
+
+        stage('Clone the Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-username/your-repository.git'
+            }
+        }
+
+        stage('Terraform Initialization') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+
+        stage('Terraform Validation') {
+            steps {
+                sh 'terraform validate'
+            }
+        }
+
+        stage('Infrastructure Checks') {
+            steps {
+                sh 'terraform plan'
+            }
+        }
+
+        stage('Create/Destroy EKS Cluster') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform ${action}'
+                }
+            }
+        }
+    }
+}
+```
+
+### Jenkins Parameter Configuration
+
+Make the pipeline **parameterized** with a choice parameter.
+
+**Parameter Name:** `action`
+
+**Choices:**
+
+```
+apply --auto-approve
+destroy --auto-approve
+```
+
+This allows Jenkins users to:
+
+* **Create the EKS cluster** using `apply`
+* **Destroy the EKS cluster** using `destroy`
+
+### Benefits of This Pipeline
+
+* Fully automated **EKS cluster provisioning**
+* Infrastructure managed using **Terraform (IaC)**
+* CI/CD integration using **Jenkins**
+* Supports both **creation and deletion of infrastructure**
